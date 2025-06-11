@@ -11,7 +11,7 @@ import {
     Box,
     Typography
 } from '@mui/material';
-import RichTextEditor from './RichTextEditor'; // Adjust path as needed
+import RichTextEditor from "./richTextEditor.jsx";
 
 const types = ['Find An Idea', 'Starting Up', 'Marketing', ''];
 
