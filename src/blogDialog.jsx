@@ -13,7 +13,11 @@ import {
 } from '@mui/material';
 import RichTextEditor from './RichTextEditor'; // Adjust path as needed
 
-const types = ['Find An Idea', 'Starting Up', 'Marketing', ''];
+const types = [
+    { label: 'Earn Money', value: 'earn-money' },
+    { label: 'Latest News', value: 'latest-news' },
+    { label: 'AI Tools', value: 'ai-tools' },
+];
 
 const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) => {
     return (
@@ -21,10 +25,10 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
             open={open}
             onClose={onClose}
             fullWidth
-            maxWidth="md" // Changed from "sm" to "md" to accommodate the rich text editor
+            maxWidth="md"
             sx={{
                 '& .MuiDialog-paper': {
-                    maxHeight: '90vh' // Ensure dialog doesn't exceed viewport height
+                    maxHeight: '90vh'
                 }
             }}
         >
@@ -50,6 +54,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                     />
                 </Box>
 
+
                 <TextField
                     label="Type"
                     select
@@ -59,7 +64,9 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                     onChange={e => onChange('type', e.target.value)}
                 >
                     {types.map(t => (
-                        <MenuItem key={t} value={t}>{t}</MenuItem>
+                        <MenuItem key={t.value} value={t.value}>
+                            {t.label}
+                        </MenuItem>
                     ))}
                 </TextField>
 
