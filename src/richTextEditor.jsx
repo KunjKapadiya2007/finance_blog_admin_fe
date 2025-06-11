@@ -85,6 +85,7 @@ const RichTextEditor = ({
         if (editorRef.current) {
             const newContent = editorRef.current.innerHTML;
             setContent(newContent);
+            saveToHistory(newContent);
             if (onChange) {
                 onChange(newContent);
             }
@@ -96,10 +97,9 @@ const RichTextEditor = ({
             if (disabled) return;
             document.execCommand(command, false, value);
             handleContentChange();
-            saveToHistory(editorRef.current.innerHTML);
             editorRef.current.focus();
         },
-        [disabled, saveToHistory]
+        [disabled]
     );
 
     const formatText = useCallback(
@@ -126,7 +126,6 @@ const RichTextEditor = ({
                             range.insertNode(codeElement);
                             selection.removeAllRanges();
                             handleContentChange();
-                            saveToHistory(editorRef.current.innerHTML);
                         }
                     }
                     break;
@@ -173,9 +172,8 @@ const RichTextEditor = ({
             range.insertNode(linkElement);
             selection.removeAllRanges();
             handleContentChange();
-            saveToHistory(editorRef.current.innerHTML);
         }
-    }, [saveToHistory]);
+    }, []);
 
     const insertImage = useCallback(async () => {
         if (disabled || isUploading) return;
@@ -244,7 +242,6 @@ const RichTextEditor = ({
                         range.insertNode(br);
                         selection.removeAllRanges();
                         handleContentChange();
-                        saveToHistory(editorRef.current.innerHTML);
                     }
 
                     console.log('Uploaded:', data.secure_url);
@@ -259,7 +256,7 @@ const RichTextEditor = ({
         };
 
         input.click();
-    }, [disabled, isUploading, handleContentChange, saveToHistory]);
+    }, [disabled, isUploading]);
 
     const insertList = useCallback(
         (type) => {
@@ -322,9 +319,8 @@ const RichTextEditor = ({
                 editorRef.current.style.fontSize = `${newSize}px`;
             }
             handleContentChange();
-            saveToHistory(editorRef.current.innerHTML);
         },
-        [saveToHistory]
+        []
     );
 
     const handleKeyDown = useCallback(
@@ -375,11 +371,10 @@ const RichTextEditor = ({
                 if (confirmed) {
                     target.remove();
                     handleContentChange();
-                    saveToHistory(editorRef.current?.innerHTML || '');
                 }
             }
         },
-        [handleContentChange, saveToHistory]
+        [handleContentChange]
     );
 
     const ToolbarButton = ({ icon: Icon, onClick, tooltip, disabled: btnDisabled = false, isActive = false }) => (
@@ -656,7 +651,8 @@ const RichTextEditor = ({
                         handleImageClick(e);
                     }}
                     sx={{
-                        minHeight: `${minHeight}px`,
+                        height: `${minHeight}px`,
+                        overflowY: 'auto',
                         padding: 3,
                         fontSize: `${fontSize}px`,
                         lineHeight: 1.7,
