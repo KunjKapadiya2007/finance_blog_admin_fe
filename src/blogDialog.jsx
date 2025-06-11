@@ -11,15 +11,15 @@ import {
     Box,
     Typography
 } from '@mui/material';
-import RichTextEditor from "./richTextEditor.jsx";
+import RichTextEditor from "../src/richTextEditor.jsx";
 
 const types = [
-    { label: 'Earn Money', value: 'earn-money' },
-    { label: 'Latest News', value: 'latest-news' },
-    { label: 'AI Tools', value: 'ai-tools' },
+    {label: 'Earn Money', value: 'earn-money'},
+    {label: 'Latest News', value: 'latest-news'},
+    {label: 'AI Tools', value: 'ai-tools'},
 ];
 
-const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) => {
+const BlogDialog = ({open, onClose, formData, onChange, onSubmit, isEditing}) => {
     return (
         <Dialog
             open={open}
@@ -33,7 +33,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
             }}
         >
             <DialogTitle>{isEditing ? 'Edit Blog' : 'Create Blog'}</DialogTitle>
-            <DialogContent sx={{ pb: 1 }}>
+            <DialogContent sx={{pb: 1}}>
                 <TextField
                     label="Title"
                     fullWidth
@@ -42,7 +42,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                     onChange={e => onChange('title', e.target.value)}
                 />
 
-                <Box sx={{ mt: 2, mb: 2 }}>
+                <Box sx={{mt: 2, mb: 2}}>
                     <Typography variant="subtitle2" gutterBottom color="text.secondary">
                         Content
                     </Typography>
@@ -70,7 +70,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                     ))}
                 </TextField>
 
-                <Box sx={{ mt: 2 }}>
+                <Box sx={{mt: 2}}>
                     <Typography variant="subtitle2" gutterBottom color="text.secondary">
                         Image
                     </Typography>
@@ -87,7 +87,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                         onChange={e => onChange('image', e.target.files[0])}
                     />
                     {formData.image && typeof formData.image === 'string' && (
-                        <Box sx={{ mt: 1 }}>
+                        <Box sx={{mt: 1}}>
                             <img
                                 src={formData.image}
                                 alt="Preview"
@@ -102,7 +102,7 @@ const BlogDialog = ({ open, onClose, formData, onChange, onSubmit, isEditing }) 
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
+            <DialogActions sx={{px: 3, pb: 2}}>
                 <Button onClick={onClose}>Cancel</Button>
                 <Button variant="contained" onClick={onSubmit}>
                     {isEditing ? 'Update' : 'Create'}
