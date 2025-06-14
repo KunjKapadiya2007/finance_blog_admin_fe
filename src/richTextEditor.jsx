@@ -1,4 +1,3 @@
-// src/RichTextEditor.jsx
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     Box,
@@ -51,19 +50,22 @@ const RichTextEditor = ({
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        if (value !== content) {
-            setContent(value);
-            if (editorRef.current) {
-                editorRef.current.innerHTML = value;
-            }
-        }
-    }, [value]);
-
-    useEffect(() => {
         if (editorRef.current) {
-            editorRef.current.innerHTML = content;
+            const initialContent = value || '';
+            setContent(initialContent);
+            editorRef.current.innerHTML = initialContent;
+            setHistory([initialContent]);
+            setHistoryIndex(0);
         }
     }, []);
+
+    useEffect(() => {
+        if (value !== content && editorRef.current) {
+            setContent(value);
+            editorRef.current.innerHTML = value;
+            saveToHistory(value);
+        }
+    }, [value]);
 
     useEffect(() => {
         const text = content.replace(/<[^>]*>/g, '').trim();
@@ -112,7 +114,7 @@ const RichTextEditor = ({
                     break;
                 case 'code':
                     const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
+                    if (selection.rangeCount > 0 && !selection.isCollapsed) {
                         const range = selection.getRangeAt(0);
                         const selectedText = range.toString();
                         if (selectedText) {
@@ -121,10 +123,20 @@ const RichTextEditor = ({
                             codeElement.style.padding = '2px 4px';
                             codeElement.style.borderRadius = '3px';
                             codeElement.style.fontFamily = 'monospace';
-                            codeElement.textContent = selectedText;
+
+                            const fragment = document.createDocumentFragment();
+                            const textNode = document.createTextNode(selectedText);
+                            fragment.appendChild(textNode);
+
                             range.deleteContents();
+                            codeElement.appendChild(fragment);
                             range.insertNode(codeElement);
+
                             selection.removeAllRanges();
+                            const newRange = document.createRange();
+                            newRange.selectNodeContents(codeElement);
+                            selection.addRange(newRange);
+
                             handleContentChange();
                         }
                     }
@@ -151,25 +163,29 @@ const RichTextEditor = ({
         }
 
         url = prompt('Enter URL:', 'https://');
-        if (!url || url === 'https://') return;
+        if (!url) return;
 
-        const linkElement = document.createElement('a');
-        linkElement.href = url;
-        linkElement.textContent = linkText;
-        linkElement.style.color = '#1976d2';
-        linkElement.style.textDecoration = 'underline';
-        linkElement.style.cursor = 'pointer';
-        linkElement.onclick = (e) => {
-            e.preventDefault();
-            window.open(url, '_blank');
-        };
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
 
         if (selection.rangeCount > 0) {
             const range = selection.getRangeAt(0);
+            const linkElement = document.createElement('a');
+            linkElement.href = url;
+            linkElement.textContent = linkText;
+            linkElement.style.color = '#1976d2';
+            linkElement.style.textDecoration = 'underline';
+            linkElement.style.cursor = 'pointer';
+            linkElement.target = '_blank';
+
             if (!selection.isCollapsed) {
                 range.deleteContents();
             }
             range.insertNode(linkElement);
+
+            range.setStartAfter(linkElement);
+            range.collapse(true);
             selection.removeAllRanges();
             handleContentChange();
         }
@@ -197,7 +213,7 @@ const RichTextEditor = ({
                     const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
                     if (!cloudName || !uploadPreset) {
-                        throw new Error('Missing Cloudinary configuration.');
+                        throw new Error('Missing Cloudinary configuration. Please check your environment variables.');
                     }
 
                     const formData = new FormData();
@@ -206,12 +222,15 @@ const RichTextEditor = ({
 
                     const response = await axios.post(
                         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-                        formData
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        }
                     );
 
                     const data = response.data;
-
-                    console.log('Cloudinary response:', response.data);
 
                     const img = document.createElement('img');
                     img.src = data.secure_url;
@@ -244,11 +263,9 @@ const RichTextEditor = ({
                         handleContentChange();
                     }
 
-                    console.log('Uploaded:', data.secure_url);
-
                 } catch (error) {
                     console.error('Upload Error:', error);
-                    alert('Image upload failed. Check your Cloudinary config and try again.');
+                    alert('Image upload failed. Please try again.');
                 } finally {
                     setIsUploading(false);
                 }
@@ -554,6 +571,7 @@ const RichTextEditor = ({
                     <ToolbarButton icon={FormatBold} onClick={() => formatText('bold')} tooltip="Bold (Ctrl+B)" />
                     <ToolbarButton icon={FormatItalic} onClick={() => formatText('italic')} tooltip="Italic (Ctrl+I)" />
                     <ToolbarButton icon={FormatUnderlined} onClick={() => formatText('underline')} tooltip="Underline (Ctrl+U)" />
+                    <ToolbarButton icon={Code} onClick={() => formatText('code')} tooltip="Code" />
 
                     <Divider
                         orientation="vertical"
@@ -595,9 +613,7 @@ const RichTextEditor = ({
                         }}
                     />
 
-                    {/* History Buttons */}
                     <Badge
-                        badgeContent={historyIndex}
                         color="primary"
                         sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
                     >
@@ -609,7 +625,6 @@ const RichTextEditor = ({
                         />
                     </Badge>
                     <Badge
-                        badgeContent={history.length - historyIndex - 1}
                         color="secondary"
                         sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem', minWidth: 16, height: 16 } }}
                     >
@@ -630,7 +645,6 @@ const RichTextEditor = ({
                         }}
                     />
 
-                    {/* Clear Button */}
                     <ToolbarButton
                         icon={FormatClear}
                         onClick={clearContent}
@@ -742,7 +756,5 @@ const RichTextEditor = ({
         </Box>
     );
 };
-
-
 
 export default RichTextEditor;
